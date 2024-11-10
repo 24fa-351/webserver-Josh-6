@@ -3,27 +3,51 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <pthread.h>
+#include "static.h"
+#include "stats.h"
+#include "calc.h"
+#include "http_message.h"
 #define USERS 5
 #define DEFAULT_PORT 80
 #define BUFFER_SIZE 1024
+
+int respond_to_http_client_message(int client, http_client_message_t *http_msg)
+{
+    char* response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+    write(client, response, strlen(response));
+    return 0;
+}
+
 
 void *handle_client(void *socket_ptr)
 {
     int client = *(int *)socket_ptr;
     free(socket_ptr);
 
-    char buffer[BUFFER_SIZE];
-    int bytes_read = read(client, buffer, sizeof(buffer));
+    while(1)
+    {
+        http_client_message_t *http_msg;
+        http_read_result_t result;
+        read_http_client_message(client, &http_msg, &result);
+        if (result == BAD_REQUEST)
+        {
+            printf("Bad request\n");
+            close(client);
+            return NULL;
+        }
+        else if (result == CLOSED_CONNECTION)
+        {
+            printf("Closed connection\n");
+            close(client);
+            return NULL;
+        }
 
-    // while (bytes_read != -1 && bytes_read != 0)
-    //{
-    printf("Received: %s\n", buffer);
-    write(client, buffer, bytes_read);
-
-    bytes_read = read(client, buffer, sizeof(buffer));
-    //}
-    printf("Client terminated\n");
+        respond_to_http_client_message(client, http_msg);
+        http_client_message_free(http_msg);
+    }
+    printf("Client %d terminated\n", client);
     return NULL;
     // printf("Im a client!\n");
 }
@@ -88,7 +112,7 @@ int main(int argc, char *argv[])
     {
         printf("Server listening..\n");
     }
-    
+
     printf("Server listening on port %d\n", port);
 
     while (1)
@@ -104,13 +128,13 @@ int main(int argc, char *argv[])
             return 0;
         }
 
-        printf("Client connected\n");
-
         int *client_socket_ptr = malloc(sizeof(int));
         *client_socket_ptr = client_socket;
 
+        printf("Accepting connected %d\n", client_socket);
+
         pthread_t client_thread;
-        pthread_create(&client_thread, NULL, handle_client, client_socket_ptr);
+        pthread_create(&client_thread, NULL, handle_client, (void *)client_socket_ptr);
         pthread_detach(client_thread);
     }
 
