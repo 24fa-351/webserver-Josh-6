@@ -12,16 +12,15 @@ int main(int argc, char *argv[])
     int server_socket, client_socket, port;
     struct sockaddr_in server_address, client_address;
     socklen_t client_len = sizeof(client_address);
-    int def = 0;
+
     // Argument parsing for -p
-    if (argc = 3 &&  strcmp(argv[1], "-p") != 0) {
-        port = atoi(argv[2]);
-        def = 1;
-    }
-    else{
+    if (argc != 3 || strcmp(argv[1], "-p") != 0) {
+        //fprintf(stderr, "Format: %s -p <port>\n", argv[0]);
+        //exit(EXIT_FAILURE);
         port = DEFAULT_PORT;
     }
-
+    else{
+    port = atoi(argv[2]);}
     
     // Create a TCP socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -61,7 +60,6 @@ int main(int argc, char *argv[])
     else{
         printf("Server listening..\n"); }
 
-    
     printf("Server listening on port %d\n", port);
 
     while(1)
@@ -78,12 +76,12 @@ int main(int argc, char *argv[])
         
         printf("Client connected\n");
 
-        int *client_socket_ptr = malloc(sizeof(int));
+        /*int *client_socket_ptr = malloc(sizeof(int));
         *client_socket_ptr = client_socket;
 
-        //pthread_t client_thread;
-        //pthread_create(&client_thread, NULL, handle_client, client_socket_ptr);
-        //pthread_detach(client_thread); 
+        pthread_t client_thread;
+        pthread_create(&client_thread, NULL, handle_client, client_socket_ptr);
+        pthread_detach(client_thread);*/ 
 
     }
 
