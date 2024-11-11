@@ -1,4 +1,9 @@
 {
     "C_Cpp.errorSquiggles": "enabledIfIncludesResolve",
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "files.associations": {
+        "unistd.h": "c",
+        "pthread.h": "c",
+        "socket.h": "c"
+    }
 }

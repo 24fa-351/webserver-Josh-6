@@ -25,9 +25,10 @@ void *handle_client(void *socket_ptr)
 {
     int client = *(int *)socket_ptr;
     free(socket_ptr);
-
+    printf("Beginning loop!\n");
     while(1)
     {
+        printf("In a loop!\n");
         http_client_message_t *http_msg;
         http_read_result_t result;
         read_http_client_message(client, &http_msg, &result);
@@ -35,13 +36,13 @@ void *handle_client(void *socket_ptr)
         {
             printf("Bad request\n");
             close(client);
-            return NULL;
+            continue;
         }
         else if (result == CLOSED_CONNECTION)
         {
-            printf("Closed connection\n");
+            printf("Closed connection %d\n", client);
             close(client);
-            return NULL;
+            continue;
         }
 
         respond_to_http_client_message(client, http_msg);
@@ -90,7 +91,7 @@ int main(int argc, char *argv[])
     server_address.sin_port = htons(port);
 
     // Binding newly created socket to given IP and verification
-    if ((bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address))) != 0)
+    if ((bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address))) < 0)
     {
         perror("socket bind failed..\n");
         close(server_socket);
@@ -131,13 +132,12 @@ int main(int argc, char *argv[])
         int *client_socket_ptr = malloc(sizeof(int));
         *client_socket_ptr = client_socket;
 
-        printf("Accepting connected %d\n", client_socket);
+        printf("Accepting connection %d\n", client_socket);
 
         pthread_t client_thread;
         pthread_create(&client_thread, NULL, handle_client, (void *)client_socket_ptr);
         pthread_detach(client_thread);
     }
-
     close(server_socket);
     return 0;
 }
