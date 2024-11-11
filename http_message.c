@@ -11,7 +11,7 @@ bool is_complete_http_message(char *buffer)
 
     if (strlen(buffer) < 10)
     {
-        printf("buffer is less than 10 characters!\n");
+        //printf("buffer is less than 10 characters!\n");
         return false;
     }
     else if (strncmp(buffer, "GET ", 4) != 0)
@@ -41,6 +41,7 @@ void read_http_client_message(int client_sock, http_client_message_t **msg, http
 
     while (!is_complete_http_message(buffer))
     {
+        
         int bytes_read = read(client_sock, buffer + strlen(buffer), sizeof(buffer) - strlen(buffer));
         if (bytes_read == 0)
         {
@@ -52,11 +53,14 @@ void read_http_client_message(int client_sock, http_client_message_t **msg, http
             *result = BAD_REQUEST;
             return;
         }
+        printf("Buffer content: \n%s\n", buffer);
     }
     (*msg)->method = strndup(buffer, 3);
     char *path_start = buffer + 4;
     char *path_end = strchr(buffer + 4, ' ');
+    (*msg)->path = path_end;
     char *http_end = strchr(path_end, ' ');
+    (*msg)->http_version = http_end;
 
     if (path_end != NULL)
     {
