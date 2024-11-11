@@ -15,22 +15,34 @@
 
 int respond_to_http_client_message(int client, http_client_message_t *http_msg)
 {
-    char* response = "\nHTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
-    write(client, response, strlen(response));
+    char *response_format = "\nHTTP/1.1 200 OK\r\n"
+                            "Content-Length: %d\r\n"
+                            "Content-Type: text/plain\r\n\r\n";
+    char response[BUFFER_SIZE];
+
+    char *body = http_msg->body;
+    int body_len = http_msg->body ? strlen(http_msg->body) : 0; // cool! adds a true : false condition
+
+    int response_length = snprintf(response, sizeof(response), response_format, body_len);
+
+    write(client, response, response_length);
+    if (body_len > 0)
+    {
+        write(client, http_msg->body, strlen(body));
+    }
     return 0;
 }
-
 
 void *handle_client(void *socket_ptr)
 {
     int client = *(int *)socket_ptr;
     free(socket_ptr);
-    printf("Beginning loop!\n");
-    while(1)
+
+    while (1)
     {
         http_client_message_t *http_msg;
         http_read_result_t result;
-        
+
         read_http_client_message(client, &http_msg, &result);
         if (result == BAD_REQUEST)
         {

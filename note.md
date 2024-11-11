@@ -18,5 +18,4 @@ Content-Type: text/html
 
 ----------
 GET /calc HTTP/1.1
-
 10 12

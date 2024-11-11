@@ -11,7 +11,7 @@ bool is_complete_http_message(char *buffer)
 
     if (strlen(buffer) < 10)
     {
-        //printf("buffer is less than 10 characters!\n");
+        // printf("buffer is less than 10 characters!\n");
         return false;
     }
     else if (strncmp(buffer, "GET ", 4) != 0)
@@ -37,11 +37,13 @@ void read_http_client_message(int client_sock, http_client_message_t **msg, http
     }
     //*msg =  NULL;
     char buffer[1024];
-    strcpy(buffer, "");
+    buffer[0] = '\0';
+
+    printf("\nReading message!\n");
 
     while (!is_complete_http_message(buffer))
     {
-        
+
         int bytes_read = read(client_sock, buffer + strlen(buffer), sizeof(buffer) - strlen(buffer));
         if (bytes_read == 0)
         {
@@ -53,53 +55,87 @@ void read_http_client_message(int client_sock, http_client_message_t **msg, http
             *result = BAD_REQUEST;
             return;
         }
-        printf("Buffer content: \n%s\n", buffer);
     }
-    (*msg)->method = strndup(buffer, 3);
+
+    /*(*msg)->method = strndup(buffer, 3);
     char *path_start = buffer + 4;
     char *path_end = strchr(buffer + 4, ' ');
     (*msg)->path = path_end;
     char *http_end = strchr(path_end, ' ');
-    (*msg)->http_version = http_end;
+    (*msg)->http_version = http_end;*/
 
-    if (path_end != NULL)
+    char *method = strtok(buffer, " ");
+    // printf("Full method is: %s\n", method);
+    char *path = strtok(NULL, " ");
+    // printf("Full path is: %s\n", path);
+    char *version = strtok(NULL, "\r\n");
+    // printf("Full version is: %s\n", version);
+
+    if (!method || !path || !version)
     {
-        (*msg)->path = strndup(path_start, path_end - path_start); // Extract the path
+        *result = BAD_REQUEST;
+        free(*msg);
+        return;
     }
 
-    if (strcmp((*msg)->path, "/calc") == 0)
-    {
-        printf("Path is calc\n");
+    (*msg)->method = strdup(method);
+    (*msg)->path = strdup(path);
+    (*msg)->http_version = strdup(version);
+    (*msg)->body = NULL;
 
-        char *body_start = strchr(buffer, '\n'); // Find the first newline (end of headers)
-        if (body_start != NULL)
-        {
-            body_start++; // Move past the newline character
+    char *initial_path = strtok(path, "/"); // should be equal to stats, static, or calc
+    char *subpath1 = NULL;
+    char *subpath2 = NULL;
 
-            // Now parse the numbers from the body (the line after the newline)
-            int a, b;
-            int num_items = sscanf(body_start, "%d %d", &a, &b);
-            if (num_items == 2)
-            {
-                printf("a = %d\n", a);
-                printf("b = %d\n", b);
-            }
-            else
-            {
-                printf("Failed to parse numbers from the body\n");
-            }
-        }
-    }
-    else if (strcmp((*msg)->path, "/stats") == 0)
+    if (strcmp((*msg)->path, "/stats") == 0)
     {
         printf("Path is stats\n");
     }
-    else if (strcmp((*msg)->path, "/static") == 0)
+    else if (strcmp(initial_path, "calc") == 0)
     {
-        printf("Path is static\n");
-    }
+        //printf("Path is calc\n");
 
-    *result = MESSAGE;
+        subpath1 = strtok(NULL, "/");
+        printf("a = %s\n", subpath1);
+        subpath2 = strtok(NULL, "/");
+        printf("b = %s\n", subpath2);
+
+        if (subpath1 && subpath2)
+        {
+            int a = atoi(subpath1);
+            int b = atoi(subpath2);
+            int sum = a + b;
+
+            // Allocate and format the body
+            int body_size = snprintf(NULL, 0, "a = %d\nb = %d\nsum = %d\n\n", a, b, sum) + 1; //calculates length of the string
+            (*msg)->body = malloc(body_size);
+            if ((*msg)->body != NULL)
+            {
+                snprintf((*msg)->body, body_size, "a = %d\nb = %d\nsum = %d\n\n", a, b, sum);
+            }
+        }
+        else if (strcmp(initial_path, "static") == 0)
+        {
+            printf("Path is static\n");
+
+            subpath1 = strtok(NULL, "/");
+            printf("Subpath 1 = %s\n", subpath1);
+            subpath2 = strtok(NULL, "/");
+            printf("Subpath 2 = %s\n", subpath2);
+        }
+
+        *result = MESSAGE;
+    }
 }
 
-void http_client_message_free(http_client_message_t *msg) { free(msg); }
+void http_client_message_free(http_client_message_t *msg)
+{
+    if (msg)
+    {
+        free(msg->method);
+        free(msg->path);
+        free(msg->http_version);
+        free(msg->body); // Free the body
+        free(msg);
+    }
+}
