@@ -4,6 +4,7 @@
     "files.associations": {
         "unistd.h": "c",
         "pthread.h": "c",
-        "socket.h": "c"
+        "socket.h": "c",
+        "stdbool.h": "c"
     }
 }

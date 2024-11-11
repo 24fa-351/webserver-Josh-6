@@ -15,7 +15,7 @@
 
 int respond_to_http_client_message(int client, http_client_message_t *http_msg)
 {
-    char* response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+    char* response = "\nHTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
     write(client, response, strlen(response));
     return 0;
 }
@@ -28,21 +28,21 @@ void *handle_client(void *socket_ptr)
     printf("Beginning loop!\n");
     while(1)
     {
-        printf("In a loop!\n");
         http_client_message_t *http_msg;
         http_read_result_t result;
+        
         read_http_client_message(client, &http_msg, &result);
         if (result == BAD_REQUEST)
         {
             printf("Bad request\n");
             close(client);
-            continue;
+            break;
         }
         else if (result == CLOSED_CONNECTION)
         {
             printf("Closed connection %d\n", client);
             close(client);
-            continue;
+            break;
         }
 
         respond_to_http_client_message(client, http_msg);
