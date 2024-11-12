@@ -2,6 +2,6 @@
 #define CALC_H
 
 
-//void sum(http_client_message_t** msg)
+char* sum(char* sp1, char* sp2);
 
 #endif

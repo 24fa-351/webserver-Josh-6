@@ -1,4 +1,5 @@
 #include "http_message.h"
+#include "calc.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -93,39 +94,25 @@ void read_http_client_message(int client_sock, http_client_message_t **msg, http
     }
     else if (strcmp(initial_path, "calc") == 0)
     {
-        //printf("Path is calc\n");
+        subpath1 = strtok(NULL, "/");
+        //printf("a = %s\n", subpath1);
+        subpath2 = strtok(NULL, "/");
+        //printf("b = %s\n", subpath2);
+
+        (*msg)->body = sum(subpath1, subpath2);
+
+    }
+    else if (strcmp(initial_path, "static") == 0)
+    {
+        printf("Path is static\n");
 
         subpath1 = strtok(NULL, "/");
-        printf("a = %s\n", subpath1);
+        printf("Subpath 1 = %s\n", subpath1);
         subpath2 = strtok(NULL, "/");
-        printf("b = %s\n", subpath2);
-
-        if (subpath1 && subpath2)
-        {
-            int a = atoi(subpath1);
-            int b = atoi(subpath2);
-            int sum = a + b;
-
-            // Allocate and format the body
-            int body_size = snprintf(NULL, 0, "a = %d\nb = %d\nsum = %d\n\n", a, b, sum) + 1; //calculates length of the string
-            (*msg)->body = malloc(body_size);
-            if ((*msg)->body != NULL)
-            {
-                snprintf((*msg)->body, body_size, "a = %d\nb = %d\nsum = %d\n\n", a, b, sum);
-            }
-        }
-        else if (strcmp(initial_path, "static") == 0)
-        {
-            printf("Path is static\n");
-
-            subpath1 = strtok(NULL, "/");
-            printf("Subpath 1 = %s\n", subpath1);
-            subpath2 = strtok(NULL, "/");
-            printf("Subpath 2 = %s\n", subpath2);
-        }
-
-        *result = MESSAGE;
+        printf("Subpath 2 = %s\n", subpath2);
     }
+
+    *result = MESSAGE;
 }
 
 void http_client_message_free(http_client_message_t *msg)
