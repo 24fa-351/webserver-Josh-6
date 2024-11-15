@@ -57,21 +57,23 @@ void read_http_client_message(int client_sock, http_client_message_t **msg, http
             return;
         }
     }
+    printf("%s\n",buffer);
 
-    /*(*msg)->method = strndup(buffer, 3);
-    char *path_start = buffer + 4;
-    char *path_end = strchr(buffer + 4, ' ');
-    (*msg)->path = path_end;
-    char *http_end = strchr(path_end, ' ');
-    (*msg)->http_version = http_end;*/
-
-    char *method = strtok(buffer, " ");
+    //char *method = strtok(buffer, " ");
     // printf("Full method is: %s\n", method);
-    char *path = strtok(NULL, " ");
+    //char *path = strtok(NULL, " ");
     // printf("Full path is: %s\n", path);
-    char *version = strtok(NULL, "\r\n");
+    //char *version = strtok(NULL, "\r\n");
     // printf("Full version is: %s\n", version);
 
+    char method [1000];
+    char path [1000];
+    char version [1000];
+    int length_parsed = 0;
+    int num_parsed = sscanf(buffer, "%s %s %s%n", method, path, version, &length_parsed);
+     printf("Full method is: %s\n", method);
+     printf("Full path is: %s\n", path);
+     printf("Full version is: %s\n", version);
     if (!method || !path || !version)
     {
         *result = BAD_REQUEST;
@@ -84,9 +86,10 @@ void read_http_client_message(int client_sock, http_client_message_t **msg, http
     (*msg)->http_version = strdup(version);
     (*msg)->body = NULL;
 
-    char *initial_path = strtok(path, "/"); // should be equal to stats, static, or calc
-    char *subpath1 = NULL;
-    char *subpath2 = NULL;
+    char initial_path [1000];
+    char subpath1 [1000];
+    char subpath2 [1000];
+    sscanf(path, "/%[^/]/%[^/]/%[^/]",  initial_path, subpath1, subpath2);
 
     if (strcmp((*msg)->path, "/stats") == 0)
     {
@@ -94,10 +97,10 @@ void read_http_client_message(int client_sock, http_client_message_t **msg, http
     }
     else if (strcmp(initial_path, "calc") == 0)
     {
-        subpath1 = strtok(NULL, "/");
-        //printf("a = %s\n", subpath1);
-        subpath2 = strtok(NULL, "/");
-        //printf("b = %s\n", subpath2);
+        //subpath1 = strtok(NULL, "/");
+        printf("a = %s\n", subpath1);
+        //subpath2 = strtok(NULL, "/");
+        printf("b = %s\n", subpath2);
 
         (*msg)->body = sum(subpath1, subpath2);
 
@@ -106,9 +109,9 @@ void read_http_client_message(int client_sock, http_client_message_t **msg, http
     {
         printf("Path is static\n");
 
-        subpath1 = strtok(NULL, "/");
+        //subpath1 = strtok(NULL, "/");
         printf("Subpath 1 = %s\n", subpath1);
-        subpath2 = strtok(NULL, "/");
+        //subpath2 = strtok(NULL, "/");
         printf("Subpath 2 = %s\n", subpath2);
     }
 
