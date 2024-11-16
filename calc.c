@@ -19,7 +19,7 @@ char* sum(char* subpath1, char* subpath2)
 
     // Allocate and format the body
     int result_size = snprintf(NULL, 0, "a = %d\nb = %d\nsum = %d\n\n", a, b, sum) + 1; // calculates length of the string
-    char* result = malloc(result_size);
+    char* result = malloc(result_size + 1);
     if (result != NULL)
     {
         snprintf(result, result_size, "a = %d\nb = %d\nsum = %d\n\n", a, b, sum);

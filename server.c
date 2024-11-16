@@ -28,8 +28,13 @@ int respond_to_http_client_message(int client, http_client_message_t *http_msg)
     write(client, response, response_length);
     if (body_len > 0)
     {
+        //printf("Body isn't empty :)\n");
         write(client, http_msg->body, strlen(body));
     }
+    else {
+        printf("Body is empty :(\n");
+    }
+    
     return 0;
 }
 
